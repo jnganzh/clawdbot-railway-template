@@ -123,8 +123,11 @@ It covers Gmail, Calendar, Drive, Sheets, and returns structured output that is 
 This template can materialize Google Workspace credentials into persistent files automatically at startup:
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON` → `/data/google/application_default_credentials.json`
 - `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET_JSON` → `/data/.config/gws/client_secret.json`
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON` is also materialized for `gws` as `/data/.config/gws/client_secret.json` when needed by the app
+- when needed by the app, `GOOGLE_APPLICATION_CREDENTIALS_JSON` is also written to `/data/.config/gws/client_secret.json`
 - the app exports `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE` for `gws`
+
+That means you can keep the OAuth client JSON in Railway Variables and let the app write the
+file on boot.
 
 For Google Workspace CLI (`gws`) on Railway, the included `bootstrap.sh` demonstrates how to:
 - write ADC credentials from `GOOGLE_APPLICATION_CREDENTIALS_JSON`
