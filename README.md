@@ -31,6 +31,11 @@ Required:
 Recommended:
 - `OPENCLAW_STATE_DIR=/data/.openclaw`
 - `OPENCLAW_WORKSPACE_DIR=/data/workspace`
+- `HOME=/data`
+
+Optional for Google Workspace CLI / Gmail access:
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` — contents of your ADC file (`application_default_credentials.json`)
+- `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET_JSON` — contents of your Google OAuth client JSON
 
 Optional:
 - `OPENCLAW_GATEWAY_TOKEN` — if not set, the wrapper generates one (not ideal). In a template, set it using a generated secret.
@@ -90,7 +95,9 @@ What does *not* persist cleanly:
 ### Optional bootstrap hook
 
 If `/data/workspace/bootstrap.sh` exists, the wrapper will run it on startup (best-effort) before starting the gateway.
-Use this to initialize persistent install prefixes or create a venv.
+Use this to initialize persistent install prefixes, create a venv, or materialize secret-backed config files on the Railway volume.
+
+This repo now ships a root-level `bootstrap.sh` you can copy into `/data/workspace/bootstrap.sh` after deploy, or adapt into your own bootstrap workflow.
 
 Example `bootstrap.sh`:
 
@@ -104,6 +111,12 @@ python3 -m venv /data/venv || true
 # Example: ensure npm/pnpm dirs exist
 mkdir -p /data/npm /data/npm-cache /data/pnpm /data/pnpm-store
 ```
+
+For Google Workspace CLI (`gws`) on Railway, the included `bootstrap.sh` demonstrates how to:
+- write ADC credentials from `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+- write `client_secret.json` from `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET_JSON`
+- clear broken `gws` encrypted credential/cache files
+- install `@googleworkspace/cli` into the persistent npm prefix
 
 ## Troubleshooting
 
