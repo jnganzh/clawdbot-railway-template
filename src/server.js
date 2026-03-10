@@ -1413,8 +1413,11 @@ const server = app.listen(PORT, "0.0.0.0", async () => {
   // Optional operator hook to install/persist extra tools under /data.
   // This is intentionally best-effort and should be used to set up persistent
   // prefixes (npm/pnpm/python venv), not to mutate the base image.
-  const bootstrapPath = path.join(WORKSPACE_DIR, "bootstrap.sh");
-  if (fs.existsSync(bootstrapPath)) {
+  // Prefer a persistent-volume bootstrap at /data/workspace/bootstrap.sh, but
+  // also support a repo-shipped /app/bootstrap.sh for first-deploy setup.
+  const bootstrapCandidates = [path.join(WORKSPACE_DIR, "bootstrap.sh"), path.join(process.cwd(), "bootstrap.sh")];
+  for (const bootstrapPath of bootstrapCandidates) {
+    if (!fs.existsSync(bootstrapPath)) continue;
     console.log(`[wrapper] running bootstrap: ${bootstrapPath}`);
     try {
       await runCmd("bash", [bootstrapPath], {
@@ -1426,6 +1429,7 @@ const server = app.listen(PORT, "0.0.0.0", async () => {
         timeoutMs: 10 * 60 * 1000,
       });
       console.log("[wrapper] bootstrap complete");
+      break;
     } catch (err) {
       console.warn(`[wrapper] bootstrap failed (continuing): ${String(err)}`);
     }

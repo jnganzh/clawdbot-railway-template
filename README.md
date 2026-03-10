@@ -95,9 +95,10 @@ What does *not* persist cleanly:
 ### Optional bootstrap hook
 
 If `/data/workspace/bootstrap.sh` exists, the wrapper will run it on startup (best-effort) before starting the gateway.
+If that file is absent, the wrapper also falls back to the repo-shipped `/app/bootstrap.sh`.
 Use this to initialize persistent install prefixes, create a venv, or materialize secret-backed config files on the Railway volume.
 
-This repo now ships a root-level `bootstrap.sh` you can copy into `/data/workspace/bootstrap.sh` after deploy, or adapt into your own bootstrap workflow.
+This repo now ships a root-level `bootstrap.sh` that can run automatically on deploy, and you can still override it later by placing your own `/data/workspace/bootstrap.sh` on the volume.
 
 Example `bootstrap.sh`:
 
