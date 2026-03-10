@@ -86,6 +86,7 @@ What persists cleanly today:
 - **Node global tools (npm/pnpm):** this template configures defaults so global installs land under `/data`:
   - npm globals: `/data/npm` (binaries in `/data/npm/bin`)
   - pnpm globals: `/data/pnpm` (binaries) + `/data/pnpm-store` (store)
+  - this is ideal for helper CLIs like `@googleworkspace/cli` (`gws`)
 - **Python packages:** create a venv under `/data` (example below). The runtime image includes Python + venv support.
 
 What does *not* persist cleanly:
@@ -96,7 +97,7 @@ What does *not* persist cleanly:
 
 If `/data/workspace/bootstrap.sh` exists, the wrapper will run it on startup (best-effort) before starting the gateway.
 If that file is absent, the wrapper also falls back to the repo-shipped `/app/bootstrap.sh`.
-Use this to initialize persistent install prefixes, create a venv, or materialize secret-backed config files on the Railway volume.
+Use this to initialize persistent install prefixes, install helper CLIs, create a venv, or materialize secret-backed config files on the Railway volume.
 
 This repo now ships a root-level `bootstrap.sh` that can run automatically on deploy, and you can still override it later by placing your own `/data/workspace/bootstrap.sh` on the volume.
 
@@ -113,11 +114,48 @@ python3 -m venv /data/venv || true
 mkdir -p /data/npm /data/npm-cache /data/pnpm /data/pnpm-store
 ```
 
+### Gmail / Calendar on Railway: use Google Workspace CLI (`gws`)
+
+If you want OpenClaw to work with Gmail / Calendar on Railway, prefer
+[`@googleworkspace/cli`](https://github.com/googleworkspace/cli) over older ad-hoc tools.
+It covers Gmail, Calendar, Drive, Sheets, and returns structured output that is easier for agents to use.
+
+This template can materialize Google Workspace credentials into persistent files automatically at startup:
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` → `/data/google/application_default_credentials.json`
+- `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET_JSON` → `/data/.config/gws/client_secret.json`
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` is also materialized for `gws` as `/data/.config/gws/client_secret.json` when needed by the app
+- the app exports `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE` for `gws`
+
 For Google Workspace CLI (`gws`) on Railway, the included `bootstrap.sh` demonstrates how to:
 - write ADC credentials from `GOOGLE_APPLICATION_CREDENTIALS_JSON`
 - write `client_secret.json` from `GOOGLE_WORKSPACE_CLI_CLIENT_SECRET_JSON`
 - clear broken `gws` encrypted credential/cache files
 - install `@googleworkspace/cli` into the persistent npm prefix
+
+You can also use the example script:
+
+```bash
+cp examples/bootstrap.google-workspace-cli.sh /data/workspace/bootstrap.sh
+chmod +x /data/workspace/bootstrap.sh
+```
+
+Then redeploy or restart so the wrapper runs the bootstrap script, and run:
+
+```bash
+gws auth login -s gmail,calendar
+```
+
+Notes:
+- `gws auth login` / `gws auth setup` are interactive OAuth flows, so you may need to complete them from a browser-backed shell/session.
+- Global npm installs are configured to persist under `/data/npm`, so `gws` survives redeploys.
+- Since `HOME=/data`, the default `gws` auth/config dir lives under `/data/.config/gws` and should survive redeploys too.
+- If you want to pin a version, set `GWS_VERSION` before bootstrap runs.
+
+A ready-to-copy example lives at:
+
+```text
+examples/bootstrap.google-workspace-cli.sh
+```
 
 ## Troubleshooting
 
