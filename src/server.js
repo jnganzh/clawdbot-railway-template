@@ -70,6 +70,28 @@ function resolveGatewayToken() {
 const OPENCLAW_GATEWAY_TOKEN = resolveGatewayToken();
 process.env.OPENCLAW_GATEWAY_TOKEN = OPENCLAW_GATEWAY_TOKEN;
 
+function materializeGoogleWorkspaceCredentials() {
+  const raw = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON?.trim();
+  if (!raw) return;
+
+  const configDir = process.env.GOOGLE_WORKSPACE_CLI_CONFIG_DIR?.trim() || path.join(os.homedir(), ".config", "gws");
+  const credentialsPath = process.env.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE?.trim() || path.join(configDir, "client_secret.json");
+
+  try {
+    // Validate JSON before writing.
+    JSON.parse(raw);
+    fs.mkdirSync(path.dirname(credentialsPath), { recursive: true });
+    fs.writeFileSync(credentialsPath, raw + "\n", { encoding: "utf8", mode: 0o600 });
+    process.env.GOOGLE_WORKSPACE_CLI_CONFIG_DIR = configDir;
+    process.env.GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = credentialsPath;
+    console.log(`[gws] Materialized GOOGLE_APPLICATION_CREDENTIALS_JSON to ${credentialsPath}`);
+  } catch (err) {
+    console.warn(`[gws] Failed to materialize GOOGLE_APPLICATION_CREDENTIALS_JSON: ${String(err)}`);
+  }
+}
+
+materializeGoogleWorkspaceCredentials();
+
 // Where the gateway will listen internally (we proxy to it).
 const INTERNAL_GATEWAY_PORT = Number.parseInt(process.env.INTERNAL_GATEWAY_PORT ?? "18789", 10);
 const INTERNAL_GATEWAY_HOST = process.env.INTERNAL_GATEWAY_HOST ?? "127.0.0.1";

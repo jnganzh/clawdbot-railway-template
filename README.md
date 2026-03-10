@@ -112,6 +112,15 @@ If you want OpenClaw to work with Gmail / Calendar on Railway, prefer
 [`@googleworkspace/cli`](https://github.com/googleworkspace/cli) over older ad-hoc tools.
 It covers Gmail, Calendar, Drive, Sheets, and returns structured output that is easier for agents to use.
 
+This template can also materialize `GOOGLE_APPLICATION_CREDENTIALS_JSON` into a persistent
+file for `gws` automatically at startup:
+- source env: `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+- written to: `/data/.config/gws/client_secret.json`
+- exported as: `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE`
+
+That means you can keep the OAuth client JSON in Railway Variables and let the app write the
+file on boot.
+
 Recommended pattern:
 
 1. Copy the example bootstrap script into the persistent workspace:
